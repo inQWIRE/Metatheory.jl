@@ -46,7 +46,7 @@
 18. a := HighestNode(b) }
 """
 
-function ExplainAlongPath(a::Id,b::Id,g::EGraph) # What should this return?
+function ExplainAlongPath(a::Id,b::Id,g::EGraph, PendingProofs!::Vector{Tuple{Id, Id}}) 
     let c = find(g,a) # find(g,a) should get us to the top level of the UnionFind in g for id a
         while (a /= c)
             let d = parent(a) # ??? parent wrt e-graph? what does that mean...
@@ -64,8 +64,38 @@ function ExplainAlongPath(a::Id,b::Id,g::EGraph) # What should this return?
 end
 
 
-function NearestCommonAncestor(a::Id, b::Id, g::EGraph) #What should this return? Id?
+function NearestCommonAncestor(a::Id, b::Id, g::EGraph)::Union{Id,Nothing}#What should this return? Id? Yes
+    function ancestors(node, visited)
+        ancestor_set = Set{Id}()
+        stack = [node]
+        
+        while !isempty(stack)
+            current_node = pop!(stack)
+            if current_node in visited # Handle cycles
+                continue
+            end
+            push!(visited, current_node)
+            push!(ancestor_set, current_node)
+            parents = g.getindex(current_node)
+            if !isempty(parents)
+                for parent in parents
+                    push!(stack, parent)
+                end
+            end
+        end
+        return ancestor_set
+    end
+    
 
+    # Get ancestors of both nodes
+    visited = Set{Id}()
+    ancestors1 = ancestors(a, visited)
+    visited = Set{Id}()
+    ancestors2 = ancestors(b, visited)
+    
+    # Find nearest common ancestor
+    common_ancestors = intersect(ancestors1, ancestors2)
+    return isempty(common_ancestors) ? noting : first(common_ancestors)
 end
 
 """
@@ -83,8 +113,8 @@ function Explain(c1::Id, c2::Id, g::EGraph)
         while (~isempty(PendingProofs))
             let ab = pop!(PendingProofs)
                     let c = NearestCommonAncestor(ab[1],ab[2],g)
-                        ExplainAlongPath(ab[1],c,g) # Not sure where this is meant to go
-                        ExplainAlongPath(ab[2],c,g) # Same as above
+                        ExplainAlongPath(ab[1],c,g,PendingProofs) # Not sure where this is meant to go
+                        ExplainAlongPath(ab[2],c,g,PendingProofs) # Same as above
                 end
             end
         end

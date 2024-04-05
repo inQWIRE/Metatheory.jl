@@ -49,4 +49,7 @@ export areequal
 export @areequal
 export @areequalg
 
+include("explain.jl")
+export Explain
+
 end
