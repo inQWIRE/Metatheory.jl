@@ -45,11 +45,14 @@
 17. Union(a, b)
 18. a := HighestNode(b) }
 """
+function parents(a::Id)
+    return g.getindex(current_node).parents
+end
 
 function ExplainAlongPath(a::Id,b::Id,g::EGraph, PendingProofs!::Vector{Tuple{Id, Id}}) 
     let c = find(g,a) # find(g,a) should get us to the top level of the UnionFind in g for id a
         while (a /= c)
-            let d = parent(a) # ??? parent wrt e-graph? what does that mean...
+            let d = parents(a) # ??? parent wrt e-graph? what does that mean...
                 # If edge is labelled 
                 #   "Output" (a,b)?? (return?)
                 # Else return some label equality thing ??
@@ -76,11 +79,9 @@ function NearestCommonAncestor(a::Id, b::Id, g::EGraph)::Union{Id,Nothing}#What 
             end
             push!(visited, current_node)
             push!(ancestor_set, current_node)
-            parents = g.getindex(current_node)
-            if !isempty(parents)
-                for parent in parents
-                    push!(stack, parent)
-                end
+            parents = parents(current_node)
+            for parent in parents
+                push!(stack, parent)
             end
         end
         return ancestor_set
